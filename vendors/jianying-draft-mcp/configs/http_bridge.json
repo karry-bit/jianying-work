@@ -1,0 +1,9 @@
+{
+  "_comment": "Run bridge/mcp_http_bridge.py first; use this for URL-only clients.",
+  "mcpServers": {
+    "jianying": {
+      "type": "http",
+      "url": "http://127.0.0.1:8765/mcp"
+    }
+  }
+}

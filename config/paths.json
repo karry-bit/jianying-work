@@ -1,0 +1,13 @@
+{
+  "_comment": "本机路径常量。迁移机器时只改这一份；mcp_servers.json 与编排器都从这里读。",
+  "project_root": "C:\\Users\\karry\\Desktop\\jianyin work",
+  "draft_root": "C:\\Users\\karry\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft",
+  "jianying_exe": "C:\\Users\\karry\\AppData\\Local\\JianyingPro\\Apps\\JianyingPro.exe",
+  "ffmpeg_dir": "C:\\Program Files\\ffmpeg\\bin",
+  "python312": "C:\\Users\\karry\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "vendors_root": "C:\\Users\\karry\\Desktop\\jianyin work\\vendors",
+  "work_dir": "C:\\Users\\karry\\Desktop\\jianyin work\\work",
+  "sample_asset_video": "C:\\Users\\karry\\AppData\\Local\\Doubao\\User Data\\Default\\.doubao\\agent_mode\\workspace\\.user_skills\\jianying-editor\\assets\\video.mp4",
+  "sample_asset_audio": "C:\\Users\\karry\\AppData\\Local\\Doubao\\User Data\\Default\\.doubao\\agent_mode\\workspace\\.user_skills\\jianying-editor\\assets\\audio.mp3",
+  "sample_asset_srt": "C:\\Users\\karry\\AppData\\Local\\Doubao\\User Data\\Default\\.doubao\\agent_mode\\workspace\\.user_skills\\jianying-editor\\assets\\subtitle.srt"
+}

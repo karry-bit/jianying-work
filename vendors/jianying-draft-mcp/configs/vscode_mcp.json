@@ -1,0 +1,13 @@
+{
+  "_comment": "Put this at .vscode/mcp.json (workspace) or the user-level mcp.json.",
+  "servers": {
+    "jianying": {
+      "type": "stdio",
+      "command": "<PYTHON>",
+      "args": [
+        "<REPO>/server/jianying_mcp_server.py"
+      ]
+    }
+  },
+  "inputs": []
+}

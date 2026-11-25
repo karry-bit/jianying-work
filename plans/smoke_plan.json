@@ -1,0 +1,20 @@
+{
+  "_comment": "冒烟测试计划：用本地样片走通 观察 -> 成稿 -> 精修 流水线。正式使用时由 AI 编排层按需求生成同类计划。",
+  "draft_name": "工作台冒烟测试",
+  "canvas": {"width": 1920, "height": 1080, "fps": 30},
+  "observe": [
+    "C:\\Users\\karry\\AppData\\Local\\Doubao\\User Data\\Default\\.doubao\\agent_mode\\workspace\\.user_skills\\jianying-editor\\assets\\video.mp4"
+  ],
+  "storyboard": [
+    {
+      "duration": "5s",
+      "video": "C:\\Users\\karry\\AppData\\Local\\Doubao\\User Data\\Default\\.doubao\\agent_mode\\workspace\\.user_skills\\jianying-editor\\assets\\video.mp4",
+      "caption": "工作台冒烟测试字幕",
+      "transition": "叠化"
+    }
+  ],
+  "refine": [
+    {"tool": "jianying_set_clip_transform", "arguments": {"uniform_scale": 1.0}}
+  ],
+  "allow_replace": true
+}

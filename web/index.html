@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>剪映剪辑工作台</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --card: #ffffff; --line: #e2e7ec; --text: #1f2933;
+    --muted: #6b7785; --primary: #2563eb; --primary-d: #1d4ed8;
+    --ok: #16a34a; --warn: #d97706; --err: #dc2626; --code: #f0f3f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+         background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px 24px;
+           background: var(--card); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 18px; margin: 0; }
+  .status { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .dot.running { background: var(--warn); animation: pulse 1.2s infinite; }
+  .dot.ok { background: var(--ok); }
+  .dot.err { background: var(--err); }
+  @keyframes pulse { 50% { opacity: .4; } }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px 24px; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .card h2 { font-size: 15px; margin: 0 0 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; color: var(--muted); }
+  input, textarea, select { font: inherit; border: 1px solid var(--line); border-radius: 8px;
+            padding: 8px 10px; background: #fff; color: var(--text); }
+  input:focus, textarea:focus, select:focus { outline: 2px solid #bfdbfe; border-color: var(--primary); }
+  input[type="number"] { width: 90px; }
+  textarea { width: 100%; resize: vertical; }
+  .shot, .step { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: #fafbfc; }
+  .shot-grid { display: grid; grid-template-columns: 2fr 2fr 90px 1.6fr 1.4fr 34px; gap: 8px; }
+  .step-grid { display: grid; grid-template-columns: 1fr 2fr 34px; gap: 8px; }
+  .btn { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 8px 14px;
+         cursor: pointer; font: inherit; color: var(--text); }
+  .btn:hover { background: var(--code); }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn.primary:hover { background: var(--primary-d); }
+  .btn.danger { color: var(--err); }
+  .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .muted { color: var(--muted); font-size: 12px; }
+  pre.log { background: #101828; color: #e6edf3; border-radius: 10px; padding: 12px;
+            height: 260px; overflow-y: auto; font-size: 12px; line-height: 1.6; }
+  pre.report { background: var(--code); border-radius: 10px; padding: 12px; height: 220px;
+               overflow: auto; font-size: 12px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; }
+  .badge.pending { background: var(--code); color: var(--muted); }
+  .badge.running { background: #fef3c7; color: var(--warn); }
+  .badge.dry_run_ok { background: #dbeafe; color: var(--primary); }
+  .badge.ok { background: #dcfce7; color: var(--ok); }
+  .badge.error { background: #fee2e2; color: var(--err); }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .del { border: none; background: none; cursor: pointer; color: var(--err); font-size: 18px; }
+  .browse { border: 1px solid var(--line); background: #fff; border-radius: 8px; cursor: pointer;
+            padding: 6px 9px; color: var(--primary); white-space: nowrap; }
+  .browse:hover { background: var(--code); }
+  .modal-mask { position: fixed; inset: 0; background: rgba(16,24,40,.45); display: none;
+                align-items: center; justify-content: center; z-index: 50; }
+  .modal-mask.open { display: flex; }
+  .modal { background: #fff; border-radius: 14px; width: 640px; max-width: 92vw; max-height: 76vh;
+           display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px;
+                border-bottom: 1px solid var(--line); }
+  .modal-bar { display: flex; gap: 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  .fs-list { overflow-y: auto; padding: 8px 16px; }
+  .fs-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+  .fs-row:hover { background: var(--code); }
+  .fs-row .ico { width: 20px; text-align: center; }
+  .fs-row .meta { margin-left: auto; color: var(--muted); font-size: 12px; }
+  .shot-actions { display: flex; gap: 4px; align-items: center; justify-content: flex-end; }
+  .media-cell { display: flex; gap: 6px; min-width: 0; }
+  .media-cell input { flex: 1; min-width: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>剪映剪辑工作台</h1>
+  <div class="status"><span id="dot" class="dot"></span><span id="statusText">未连接</span></div>
+</header>
+
+<main>
+  <!-- ===== 模型接入 ===== -->
+  <section class="card" id="modelCard" style="margin-bottom:20px">
+    <div class="toolbar">
+      <h2 style="margin:0">模型接入（可选 · 让 AI 按需求自动拆成分镜）</h2>
+      <span id="modelStatus" class="muted">未配置</span>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>提供方预设</label>
+        <select id="mProvider">
+          <option value="custom">自定义（OpenAI 兼容）</option>
+          <option value="openai">OpenAI</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="minimax">MiniMax</option>
+          <option value="qwen">通义百炼</option>
+        </select>
+      </div>
+      <div class="field" style="flex:2">
+        <label>接口地址 base_url</label>
+        <input id="mBaseUrl" placeholder="https://api.example.com/v1">
+      </div>
+      <div class="field">
+        <label>模型名</label>
+        <input id="mModel" placeholder="如 deepseek-chat / gpt-4o-mini">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field" style="flex:2">
+        <label>API Key（留空表示不修改已保存的 Key）</label>
+        <input id="mKey" type="password" placeholder="sk-...">
+      </div>
+      <div class="field">
+        <label>温度</label>
+        <input id="mTemp" type="number" step="0.1" min="0" max="2" value="0.7">
+      </div>
+      <div class="field" style="justify-content:flex-end">
+        <label style="display:flex;gap:6px;align-items:center;height:34px">
+          <input type="checkbox" id="mMulti"> 多模态（发送代表帧给模型）
+        </label>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnSaveModel">保存模型配置</button>
+      <span class="muted" id="modelMsg"></span>
+    </div>
+  </section>
+
+  <!-- ===== 左：剪辑计划 ===== -->
+  <section class="card">
+    <h2>剪辑计划</h2>
+
+    <div class="row">
+      <div class="field" style="flex:2">
+        <label>草稿名</label>
+        <input id="draftName" placeholder="我的短片">
+      </div>
+      <div class="field"><label>宽</label><input id="width" type="number" value="1920"></div>
+      <div class="field"><label>高</label><input id="height" type="number" value="1080"></div>
+      <div class="field"><label>帧率</label><input id="fps" type="number" value="30"></div>
+    </div>
+
+    <div class="field" style="margin-bottom:12px">
+      <label>需求描述（AI 据此拆成分镜）</label>
+      <textarea id="brief" rows="3" placeholder="例如：15 秒产品短片，开头放开场画面，后面两个产品镜头各 5 秒，叠化转场，整体明亮干净。"></textarea>
+    </div>
+
+    <div class="field" style="margin-bottom:12px">
+      <label style="display:flex;justify-content:space-between;align-items:center">
+        <span>附加素材路径（每行一个，AI 拆镜时一并参考）</span>
+        <button class="browse" id="extraBrowse" type="button">📂 浏览素材</button>
+      </label>
+      <textarea id="extraAssets" rows="2" placeholder="C:/Users/…/素材.mp4"></textarea>
+    </div>
+
+    <div class="toolbar">
+      <strong>分镜列表</strong>
+      <button class="btn" id="addShot">＋ 添加镜头</button>
+    </div>
+    <div id="shots"></div>
+
+    <details>
+      <summary class="muted" style="cursor:pointer">高级：精修步骤（可选）</summary>
+      <div style="margin-top:10px">
+        <div class="toolbar">
+          <span class="muted">每条一步：缩放 / 滤镜 / 转场 / 调色等</span>
+          <button class="btn" id="addStep">＋ 添加步骤</button>
+        </div>
+        <div id="steps"></div>
+      </div>
+    </details>
+
+    <div class="actions">
+      <button class="btn" id="btnAiPlan">✨ AI 根据需求生成分镜</button>
+      <button class="btn" id="btnValidate">校验计划</button>
+      <button class="btn primary" id="btnRun">生成草稿</button>
+      <button class="btn" id="btnSample">填入样片</button>
+    </div>
+    <p class="muted" id="validateMsg"></p>
+  </section>
+
+  <!-- ===== 右：执行状态 ===== -->
+  <section class="card">
+    <div class="toolbar">
+      <h2 style="margin:0">执行状态</h2>
+      <span id="badge" class="badge pending">排队</span>
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>运行日志</label>
+      <pre class="log" id="log">等待操作…</pre>
+    </div>
+    <div class="field">
+      <label>结果报告</label>
+      <pre class="report" id="report">—</pre>
+    </div>
+  </section>
+</main>
+
+<!-- ===== 素材文件选择弹窗 ===== -->
+<div id="fsModal" class="modal-mask">
+  <div class="modal">
+    <div class="modal-head">
+      <strong>选择素材（本机文件）</strong>
+      <button class="del" id="fsClose" title="关闭">×</button>
+    </div>
+    <div class="modal-bar">
+      <button class="btn" id="fsUp">↑ 上级目录</button>
+      <span id="fsPath" class="muted">此电脑</span>
+    </div>
+    <div id="fsList" class="fs-list"></div>
+  </div>
+</div>
+
+<script>
+const state = {
+  shots: [{ video: "", audio: "", duration: "5s", caption: "", transition: "" }],
+  steps: [],
+  refineTools: [],
+  running: false,
+  pollTimer: null,
+};
+
+const $ = (id) => document.getElementById(id);
+
+const PRESETS = {
+  openai: "https://api.openai.com/v1",
+  deepseek: "https://api.deepseek.com",
+  minimax: "https://api.minimax.chat/v1",
+  qwen: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  custom: "",
+};
+
+function setModelStatus(hasKey) {
+  $("modelStatus").textContent = hasKey ? "已配置" : "未配置";
+}
+
+async function loadModel() {
+  try {
+    const r = await fetch("/api/model-config");
+    const c = await r.json();
+    $("mProvider").value = c.provider || "custom";
+    $("mBaseUrl").value = c.base_url || "";
+    $("mModel").value = c.model || "";
+    $("mTemp").value = c.temperature ?? 0.7;
+    $("mMulti").checked = !!c.multimodal;
+    setModelStatus(c.has_key);
+  } catch (e) { /* 服务未启动时忽略 */ }
+}
+
+async function saveModel() {
+  const body = {
+    provider: $("mProvider").value,
+    base_url: $("mBaseUrl").value.trim(),
+    model: $("mModel").value.trim(),
+    api_key: $("mKey").value,
+    temperature: parseFloat($("mTemp").value) || 0.7,
+    multimodal: $("mMulti").checked,
+  };
+  const r = await fetch("/api/model-config", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (d.ok) {
+    setModelStatus(d.config.has_key);
+    $("mKey").value = "";
+    $("modelMsg").textContent = "已保存";
+  } else {
+    $("modelMsg").textContent = "保存失败";
+  }
+}
+
+function collectAssets() {
+  const set = new Set();
+  state.shots.forEach((s) => { if (s.video) set.add(s.video); if (s.audio) set.add(s.audio); });
+  $("extraAssets").value.split(/\r?\n/).map((t) => t.trim()).filter(Boolean).forEach((p) => set.add(p));
+  return [...set];
+}
+
+function applyPlan(plan) {
+  if (plan.draft_name) $("draftName").value = plan.draft_name;
+  if (plan.canvas) {
+    $("width").value = plan.canvas.width || 1920;
+    $("height").value = plan.canvas.height || 1080;
+    $("fps").value = plan.canvas.fps || 30;
+  }
+  state.shots = (plan.storyboard || []).map((x) => ({
+    video: x.video || "", audio: x.audio || "", duration: x.duration || "5s",
+    caption: x.caption || "", transition: x.transition || "",
+  }));
+  state.steps = (plan.refine || []).map((s) => ({
+    tool: s.tool || "", argumentsText: JSON.stringify(s.arguments || {}, null, 2),
+  }));
+  renderShots();
+  renderSteps();
+}
+
+// ===== 素材文件选择弹窗 =====
+let fsTarget = null;
+let fsCurrent = "";
+let fsParent = "";
+
+function fsRow(name, ico, onclick) {
+  const div = document.createElement("div");
+  div.className = "fs-row";
+  div.innerHTML = `<span class="ico">${ico}</span><span>${name}</span>`;
+  div.onclick = onclick;
+  $("fsList").appendChild(div);
+}
+
+async function loadDir(path) {
+  fsCurrent = path;
+  const r = await fetch("/api/fs/list?path=" + encodeURIComponent(path));
+  const d = await r.json();
+  fsParent = d.parent || "";
+  $("fsPath").textContent = d.current || "此电脑";
+  const box = $("fsList");
+  box.innerHTML = "";
+  (d.dirs || []).forEach((dir) => fsRow(dir.name, "📁", () => loadDir(dir.path)));
+  (d.files || []).forEach((f) => fsRow(f.name, "🎬", () => {
+    if (fsTarget) {
+      if (fsTarget.tagName === "TEXTAREA") {
+        const v = fsTarget.value.trim();
+        fsTarget.value = v ? v + "\n" + f.path : f.path;
+      } else {
+        fsTarget.value = f.path;
+      }
+    }
+    closePicker();
+  }));
+  if (!(d.dirs || []).length && !(d.files || []).length) {
+    box.innerHTML = '<div class="muted">空目录</div>';
+  }
+}
+
+function openPicker(target) {
+  fsTarget = target;
+  loadDir("");
+  $("fsModal").classList.add("open");
+}
+
+function closePicker() {
+  $("fsModal").classList.remove("open");
+  fsTarget = null;
+}
+
+async function aiPlan() {
+  const requirement = $("brief").value.trim();
+  if (!requirement) { $("validateMsg").textContent = "先写需求描述"; return; }
+  const body = {
+    requirement, assets: collectAssets(),
+    draft_name: $("draftName").value.trim(),
+    canvas: { width: +$("width").value, height: +$("height").value, fps: +$("fps").value },
+  };
+  $("validateMsg").textContent = "AI 正在分析素材并拆镜…";
+  try {
+    const r = await fetch("/api/plan-from-requirement", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!d.ok) { $("validateMsg").textContent = "❌ " + (d.errors || []).join("；"); return; }
+    applyPlan(d.plan);
+    $("validateMsg").textContent = "✅ AI 已生成分镜，可先校验再生成草稿";
+  } catch (e) {
+    $("validateMsg").textContent = "❌ 请求失败：" + e.message;
+  }
+}
+
+async function loadMeta() {
+  try {
+    const res = await fetch("/api/meta");
+    const data = await res.json();
+    state.refineTools = data.refine_tools || [];
+    state.sample = data.sample || {};
+    renderSteps();
+  } catch (e) {
+    setStatus("err", "服务未连接");
+  }
+}
+
+function renderShots() {
+  const box = $("shots");
+  box.innerHTML = "";
+  state.shots.forEach((s, i) => {
+    const div = document.createElement("div");
+    div.className = "shot";
+    div.innerHTML = `
+      <div class="shot-grid">
+        <div class="media-cell">
+          <input data-i="${i}" data-k="video" placeholder="视频绝对路径" value="${s.video}">
+          <button class="browse" data-i="${i}" data-target="video" title="浏览视频">📂</button>
+        </div>
+        <div class="media-cell">
+          <input data-i="${i}" data-k="audio" placeholder="旁白音频（可选）" value="${s.audio}">
+          <button class="browse" data-i="${i}" data-target="audio" title="浏览音频">📂</button>
+        </div>
+        <input data-i="${i}" data-k="duration" placeholder="时长" value="${s.duration}">
+        <input data-i="${i}" data-k="caption" placeholder="字幕" value="${s.caption}">
+        <input data-i="${i}" data-k="transition" placeholder="转场，如叠化" value="${s.transition}">
+        <button class="del" data-del-shot="${i}" title="删除">×</button>
+      </div>`;
+    box.appendChild(div);
+  });
+  box.querySelectorAll("input[data-k]").forEach((el) => {
+    el.addEventListener("input", () => {
+      state.shots[+el.dataset.i][el.dataset.k] = el.value;
+    });
+  });
+  box.querySelectorAll(".browse").forEach((el) => {
+    el.addEventListener("click", () => {
+      const input = el.parentElement.querySelector("input");
+      openPicker(input);
+    });
+  });
+  box.querySelectorAll("[data-del-shot]").forEach((el) => {
+    el.addEventListener("click", () => {
+      state.shots.splice(+el.dataset.delShot, 1);
+      renderShots();
+    });
+  });
+}
+
+function renderSteps() {
+  const box = $("steps");
+  box.innerHTML = "";
+  state.steps.forEach((st, i) => {
+    const div = document.createElement("div");
+    div.className = "step";
+    const opts = state.refineTools
+      .map((t) => `<option ${t === st.tool ? "selected" : ""}>${t}</option>`).join("");
+    div.innerHTML = `
+      <div class="step-grid">
+        <select data-i="${i}" data-k="tool">${opts}</select>
+        <textarea data-i="${i}" data-k="args" rows="2" placeholder='参数 JSON，如 {"uniform_scale": 1.2}'>${st.argumentsText || ""}</textarea>
+        <button class="del" data-del-step="${i}" title="删除">×</button>
+      </div>`;
+    box.appendChild(div);
+  });
+  box.querySelectorAll("select").forEach((el) => {
+    el.addEventListener("change", () => { state.steps[+el.dataset.i].tool = el.value; });
+  });
+  box.querySelectorAll("textarea").forEach((el) => {
+    el.addEventListener("input", () => { state.steps[+el.dataset.i].argumentsText = el.value; });
+  });
+  box.querySelectorAll("[data-del-step]").forEach((el) => {
+    el.addEventListener("click", () => {
+      state.steps.splice(+el.dataset.delStep, 1);
+      renderSteps();
+    });
+  });
+}
+
+function collectPlan() {
+  const refine = state.steps.map((st) => {
+    let args = {};
+    if (st.argumentsText && st.argumentsText.trim()) {
+      args = JSON.parse(st.argumentsText);
+    }
+    return { tool: st.tool, arguments: args };
+  });
+  return {
+    draft_name: $("draftName").value.trim() || "未命名短片",
+    canvas: { width: +$("width").value, height: +$("height").value, fps: +$("fps").value },
+    storyboard: state.shots.map((s) => ({
+      duration: s.duration, video: s.video, audio: s.audio || undefined,
+      caption: s.caption, transition: s.transition || undefined,
+    })).filter((s) => s.video),
+    refine,
+    allow_replace: false,
+  };
+}
+
+function setStatus(cls, text) {
+  const dot = $("dot");
+  dot.className = "dot " + cls;
+  $("statusText").textContent = text;
+  const badge = $("badge");
+  badge.className = "badge " + cls;
+  const map = { pending: "排队", running: "执行中", dry_run_ok: "校验通过", ok: "完成", error: "失败", err: "失败" };
+  badge.textContent = map[cls] || text;
+}
+
+function appendLog(lines) {
+  const pre = $("log");
+  lines.forEach((l) => { pre.textContent += l + "\n"; });
+  pre.scrollTop = pre.scrollHeight;
+}
+
+async function validate() {
+  let plan;
+  try { plan = collectPlan(); } catch (e) {
+    $("validateMsg").textContent = "参数 JSON 格式有误：" + e.message;
+    return;
+  }
+  const res = await fetch("/api/validate", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plan }),
+  });
+  const data = await res.json();
+  if (data.ok) {
+    $("validateMsg").textContent = "✅ 计划校验通过";
+  } else {
+    $("validateMsg").textContent = "❌ " + (data.errors || []).join("；");
+  }
+}
+
+async function run(dryRun) {
+  if (state.running) return;
+  let plan;
+  try { plan = collectPlan(); } catch (e) {
+    $("validateMsg").textContent = "参数 JSON 格式有误：" + e.message;
+    return;
+  }
+  state.running = true;
+  setStatus("running", "执行中");
+  $("log").textContent = "";
+  $("report").textContent = "—";
+  $("validateMsg").textContent = "";
+
+  const res = await fetch("/api/run", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plan, dry_run: dryRun }),
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    setStatus("error", "失败");
+    appendLog((data.errors || []).map((e) => "· " + e));
+    state.running = false;
+    return;
+  }
+  const jobId = data.job_id;
+  state.pollTimer = setInterval(async () => {
+    const r = await fetch("/api/status/" + jobId);
+    const job = await r.json();
+    appendLog(job.logs || []);
+    if (job.report) $("report").textContent = JSON.stringify(job.report, null, 2);
+    if (["ok", "error", "dry_run_ok"].includes(job.status)) {
+      clearInterval(state.pollTimer);
+      state.running = false;
+      setStatus(job.status, job.status);
+      if (job.error) appendLog(["· 错误：" + job.error]);
+    }
+  }, 1000);
+}
+
+$("addShot").onclick = () => {
+  state.shots.push({ video: "", audio: "", duration: "5s", caption: "", transition: "" });
+  renderShots();
+};
+$("addStep").onclick = () => {
+  state.steps.push({ tool: state.refineTools[0] || "", argumentsText: "" });
+  renderSteps();
+};
+$("btnValidate").onclick = validate;
+$("btnRun").onclick = () => run(false);
+$("btnSample").onclick = () => {
+  if (state.sample && state.sample.video) {
+    state.shots[0].video = state.sample.video;
+    if (state.sample.audio) state.shots[0].audio = state.sample.audio;
+    renderShots();
+  }
+};
+$("btnSaveModel").onclick = saveModel;
+$("btnAiPlan").onclick = aiPlan;
+$("mProvider").onchange = () => {
+  const p = $("mProvider").value;
+  if (PRESETS[p]) $("mBaseUrl").value = PRESETS[p];
+};
+$("extraBrowse").onclick = () => openPicker($("extraAssets"));
+$("fsUp").onclick = () => loadDir(fsParent);
+$("fsClose").onclick = closePicker;
+$("fsModal").addEventListener("click", (e) => { if (e.target === $("fsModal")) closePicker(); });
+
+loadMeta();
+loadModel();
+renderShots();
+</script>
+</body>
+</html>

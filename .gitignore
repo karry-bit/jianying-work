@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.uv-cache/
+
+# 运行时产物（观察缓存、日志、报告）
+work/**
+!work/.gitkeep
+
+# 模型密钥只留在本机，仓库里用 example
+config/model_config.json
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

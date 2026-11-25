@@ -1,0 +1,14 @@
+{
+  "_comment": "Replace <PYTHON> and <REPO> with your own absolute paths.",
+  "mcpServers": {
+    "jianying": {
+      "command": "<PYTHON>",
+      "args": [
+        "<REPO>/server/jianying_mcp_server.py"
+      ],
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "jianying": {
+      "command": "<PYTHON>",
+      "args": [
+        "<REPO>/server/jianying_mcp_server.py"
+      ]
+    }
+  }
+}

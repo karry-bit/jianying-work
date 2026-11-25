@@ -1,0 +1,37 @@
+{
+  "_comment": "三个剪映 MCP 的 stdio 注册配置。顺序即流水线：ai-mcp 观察/清单 -> autoedit 一键成稿 -> draft-mcp 精修。路径来自 paths.json。",
+  "mcpServers": {
+    "jianying-ai": {
+      "stage": "observe",
+      "description": "素材观察：抽代表帧、读元数据、出编辑清单；也可按 manifest 直接建稿。",
+      "command": "C:\\Users\\karry\\Desktop\\jianyin work\\vendors\\jianying-ai-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "jianying_ai_mcp"],
+      "env": {
+        "JIANYING_DRAFT_ROOT": "C:\\Users\\karry\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft",
+        "JIANYING_MCP_WORK_ROOT": "C:\\Users\\karry\\Desktop\\jianyin work\\work\\ai-work",
+        "JIANYING_EXE": "C:\\Users\\karry\\AppData\\Local\\JianyingPro\\Apps\\JianyingPro.exe",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    "jianying-autoedit": {
+      "stage": "draft",
+      "description": "分镜一步成稿：视频轨 + 旁白 + 字幕 + 转场，直接落盘到草稿根目录。",
+      "command": "C:\\Users\\karry\\Desktop\\jianyin work\\vendors\\JianYing-AutoEdit-MCP\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "jianying_autoedit.server"],
+      "env": {
+        "PYTHONPATH": "C:\\Users\\karry\\Desktop\\jianyin work\\vendors\\JianYing-AutoEdit-MCP",
+        "JY_DRAFT_ROOT": "C:\\Users\\karry\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    "jianying-draft": {
+      "stage": "refine",
+      "description": "草稿精修：缩放/关键帧/滤镜/转场/调色/抠像/动画等约 47 个工具；写入前自动备份。",
+      "command": "C:\\Users\\karry\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "args": ["C:\\Users\\karry\\Desktop\\jianyin work\\vendors\\jianying-draft-mcp\\server\\jianying_mcp_server.py"],
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}

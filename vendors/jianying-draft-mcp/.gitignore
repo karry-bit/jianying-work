@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 运行时产物
+mcp.log
+*.log
+*.tmp
+*.bak
+*.bak_jianying
+backup_draft/
+out/
+chk/
+frames/
+
+# 本机/私有内容（切勿提交）
+*.zip
+jianying_mcp_package/
+export_*/
+draft_content.json
+draft_meta_info.json
+draft.extra
+.locked
+*.bak.json
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
